@@ -347,8 +347,8 @@ export default function Home() {
               <h3>Lo que estamos construyendo hoy</h3>
               <p>Packlin y DanzaLab son nuestros servicios nuevos: los productos digitales donde estamos emprendiendo y donde aplicamos toda la experiencia anterior.</p>
               <div className="new-work-grid">
-                <div><strong>Packlin</strong><span>Sitio web institucional para una PyME industrial.</span></div>
-                <div><strong>DanzaLab</strong><span>Aplicación a medida, con funcionalidades diseñadas junto al equipo del proyecto.</span></div>
+                <a href="https://packlinsa.com.ar/" target="_blank" rel="noopener noreferrer"><strong>Packlin</strong><span>Sitio web institucional para una PyME industrial.</span></a>
+                <a href="https://www.danzalab.com.ar" target="_blank" rel="noopener noreferrer"><strong>DanzaLab</strong><span>Aplicación a medida, con funcionalidades diseñadas junto al equipo del proyecto.</span></a>
               </div>
             </aside>
           </div>
@@ -360,7 +360,13 @@ export default function Home() {
             <div className="team-grid">
               {team.map((member) => (
                 <article key={member.name}>
-                  <h3>{member.name}</h3>
+                  <h3>
+                    {member.name === "Lucas Marques de Paiva" ? (
+                      <a href="https://www.linkedin.com/in/lucas-marques-de-paiva-3b57681b/" target="_blank" rel="noopener noreferrer">{member.name}</a>
+                    ) : member.name === "Augusto Tovar" ? (
+                      <a href="https://www.linkedin.com/in/attoestudio/" target="_blank" rel="noopener noreferrer">{member.name}</a>
+                    ) : member.name}
+                  </h3>
                   <p className="team-role">{member.role}</p>
                   <p>{member.bio}</p>
                 </article>

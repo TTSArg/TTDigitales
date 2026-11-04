@@ -1,5 +1,15 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Publicar en Vercel
+
+El repositorio está preparado para desplegarse con la integración nativa de Vercel:
+
+1. Importá `TTSArg/TTDigitales` desde el [panel de Vercel](https://vercel.com/new).
+2. Seleccioná `main` como rama de producción y confirmá la configuración detectada de Next.js.
+3. Configurá Node.js 22.x o superior en los ajustes del proyecto. No se requieren variables de entorno para la configuración actual.
+
+Vercel generará despliegues de producción al actualizar `main` y previews para pull requests. GitHub Actions ejecuta lint y verificación de tipos en pushes a `main` y pull requests dirigidos a esa rama. Vercel se ocupa del build y del despliegue.
+
 ## Getting Started
 
 Use Node.js 20.19.0 or newer.

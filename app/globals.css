@@ -545,11 +545,13 @@ h3 {
   margin-top: 24px;
 }
 
-.new-work-grid > div {
+.new-work-grid > a {
+  display: block;
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--surface);
+  text-decoration: none;
 }
 
 .new-work-grid strong {
