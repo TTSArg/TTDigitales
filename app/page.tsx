@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 const services = [
   {
@@ -20,7 +20,7 @@ const services = [
       "Campañas en Google Ads y SEO",
       "Estrategia de contenidos digitales",
       "Identidad visual y piezas publicitarias",
-      "Fotografía y producción de contenido visual",
+      "Fotografía y producción de contenido audiovisual",
     ],
   },
   {
@@ -28,7 +28,7 @@ const services = [
     color: "green",
     items: [
       "Diagnóstico territorial y análisis urbano",
-      "GIS, cartografía web y tableros de indicadores",
+      "GIS, cartografía web y dashboards",
       "Ciencia de datos y construcción de indicadores",
       "Evaluación de impacto de proyectos",
     ],
@@ -131,7 +131,7 @@ const startingPoints = [
   {
     title: "Tengo una idea",
     caption: "Todavía es un borrador",
-    label: "Quiero una idea",
+    label: "Tengo una idea",
     stages: [0, 1],
     questions: ["¿Tiene sentido esta idea?", "¿Qué alternativas tengo y cuál me conviene?", "¿Cuánto tiempo, esfuerzo e inversión requiere?", "¿Por dónde empiezo?"],
     response: "Empezamos evaluando alternativas con datos, antes de que inviertas.",
@@ -213,13 +213,41 @@ export default function Home() {
   const [selectedStart, setSelectedStart] = useState(0);
   const [selectedStage, setSelectedStage] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number[]>>({});
+  const [isContactOpen, setIsContactOpen] = useState(false);
+  const [contactMethod, setContactMethod] = useState<"whatsapp" | "email" | null>(null);
+  const [selectedContactNeeds, setSelectedContactNeeds] = useState<number[]>([]);
+  const [contactError, setContactError] = useState("");
+  const [contactSubmitted, setContactSubmitted] = useState(false);
+  const contactDialogRef = useRef<HTMLDialogElement>(null);
   const currentStart = startingPoints[selectedStart];
   const selectedQuestions = answers[selectedStart] ?? [];
   const activeStage = stages[selectedStage];
 
+  useEffect(() => {
+    const dialog = contactDialogRef.current;
+    if (isContactOpen && dialog && !dialog.open) {
+      dialog.showModal();
+    } else if (!isContactOpen && dialog?.open) {
+      dialog.close();
+    }
+  }, [isContactOpen]);
+
   function chooseStart(index: number) {
     setSelectedStart(index);
     setSelectedStage(startingPoints[index].stages[0]);
+  }
+
+  function openContactForm() {
+    setContactError("");
+    setContactSubmitted(false);
+    setIsContactOpen(true);
+  }
+
+  function toggleContactNeed(index: number) {
+    setSelectedContactNeeds((previous) => previous.includes(index)
+      ? previous.filter((item) => item !== index)
+      : [...previous, index]);
+    setContactError("");
   }
 
   function toggleQuestion(index: number) {
@@ -232,11 +260,35 @@ export default function Home() {
     });
   }
 
-  function showStage(index: number, scrollToProcess = false) {
+  function showStage(index: number) {
     setSelectedStage(index);
-    if (scrollToProcess) {
-      document.getElementById("proceso")?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function submitContactForm(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (selectedContactNeeds.length === 0) {
+      setContactError("Seleccioná al menos una opción para continuar.");
+      return;
     }
+
+    const formData = new FormData(event.currentTarget);
+    const replyMethod = contactMethod === "whatsapp" ? "WhatsApp" : "Mail";
+    const needs = selectedContactNeeds.map((index) => startingPoints[index].label).join(", ");
+    const body = [
+      `Nombre: ${formData.get("name")}`,
+      `Empresa o tipo de emprendimiento: ${formData.get("organization") || "No indicado"}`,
+      `Localización: ${formData.get("location") || "No indicada"}`,
+      `Intereses: ${needs}`,
+      `Medio de respuesta preferido: ${replyMethod}`,
+      `Contacto: ${formData.get("contact")}`,
+      "",
+      "Más detalles:",
+      String(formData.get("details") || "No indicó detalles adicionales."),
+    ].join("\n");
+    const mailto = `mailto:c.augustovar@gmail.com,lucasmarques6@hotmail.com?subject=${encodeURIComponent("Consulta TTDigitales")}&body=${encodeURIComponent(body)}`;
+
+    setContactSubmitted(true);
+    window.location.href = mailto;
   }
 
   return (
@@ -246,9 +298,8 @@ export default function Home() {
           <a className="brand" href="#top">TTDigitales</a>
           <nav aria-label="Navegación principal">
             <a href="#servicios">Qué hacemos</a>
-            <a href="#partida">Por dónde empezar</a>
+            <a href="#proceso">Tu proyecto</a>
             <a href="#equipo">Equipo</a>
-            <a href="#proceso">Cómo trabajamos</a>
           </nav>
           <a className="button button-primary button-small" href="#contacto">Hablemos</a>
         </div>
@@ -259,7 +310,7 @@ export default function Home() {
           <TopographicArt />
           <div className="container hero-content">
             <h1>Ordenamos tu idea, medimos lo que importa y la hacemos visible.</h1>
-            <p className="lead">TTDigitales, Tecnología y Territorios Digitales, combina desarrollo web, marketing digital y análisis territorial para empresas, organizaciones y gobiernos que buscan claridad y resultados concretos.</p>
+            <p className="lead"><strong>T</strong>ecnología y <strong>T</strong>erritorios <strong>Digitales</strong> combina desarrollo web, marketing digital y análisis territorial para empresas, organizaciones y gobiernos que buscan claridad y resultados concretos.</p>
             <div className="button-row">
               <a className="button button-primary" href="#proceso">Explorar cómo trabajamos</a>
               <a className="button" href="#contacto">Contanos tu proyecto</a>
@@ -283,10 +334,11 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="section" id="partida">
+        <section className="section process-section" id="proceso">
           <div className="container">
-            <h2>¿Desde dónde arrancamos?</h2>
-            <div className="starting-grid">
+            <h2>Tu proyecto, etapa por etapa</h2>
+            <p className="section-intro">Sabemos qué hacer en cada etapa. Elegí tu punto de partida y las preguntas que hoy tenés para ver cómo te acompañamos durante todo el proceso.</p>
+            <div className="starting-grid" role="group" aria-label="Punto de partida">
               {startingPoints.map((point, index) => (
                 <button className={`starting-card${selectedStart === index ? " is-selected" : ""}`} key={point.title} type="button" aria-pressed={selectedStart === index} onClick={() => chooseStart(index)}>
                   <strong>{point.title}</strong>
@@ -294,7 +346,8 @@ export default function Home() {
                 </button>
               ))}
             </div>
-            <div className="question-list" aria-label="Contanos qué necesitás">
+            <p className="question-prompt">¿Qué te estás preguntando?</p>
+            <div className="question-list" role="group" aria-label="Preguntas sobre tu proyecto">
               {currentStart.questions.map((question, index) => (
                 <button className={`question-chip${selectedQuestions.includes(index) ? " is-selected" : ""}`} key={question} type="button" aria-pressed={selectedQuestions.includes(index)} onClick={() => toggleQuestion(index)}>
                   {question}
@@ -307,83 +360,12 @@ export default function Home() {
                 <p>{currentStart.response}</p>
                 <div className="stage-shortcuts">
                   {currentStart.stages.map((stageIndex) => (
-                    <button type="button" key={stageIndex} onClick={() => showStage(stageIndex, true)}>{stageIndex + 1}. {stages[stageIndex].title}</button>
+                    <button type="button" key={stageIndex} onClick={() => showStage(stageIndex)}>{stageIndex + 1}. {stages[stageIndex].title}</button>
                   ))}
                 </div>
-                <p className="hint">Tocá una etapa para ver cómo intervenimos.</p>
+                <p className="hint">Elegí una etapa para ver cómo intervenimos.</p>
               </div>
             )}
-          </div>
-        </section>
-
-        <section className="section section-alt">
-          <div className="container">
-            <h2>Lo que logramos al combinar territorio y tecnología</h2>
-            <div className="combination-list">
-              <div className="combination-heading"><span>Si necesitás</span><span>Combinamos</span><span>Lográs</span></div>
-              {combinations.map(([need, combination, result]) => (
-                <div className="combination-row" key={need}><strong>{need}</strong><span>{combination}</span><span>{result}</span></div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section">
-          <div className="container">
-            <h2>Experiencia en territorio y en empresa</h2>
-            <div className="project-list">
-              {projects.map((project) => (
-                <article className="project-row" key={project.name}>
-                  <div>
-                    <strong>{project.href ? <a href={project.href} target="_blank" rel="noopener noreferrer">{project.name}</a> : project.name}</strong>
-                    <small>{project.location}</small>
-                  </div>
-                  <p>{project.description}</p>
-                </article>
-              ))}
-            </div>
-            <aside className="new-work">
-              <span className="tag">En desarrollo</span>
-              <h3>Lo que estamos construyendo hoy</h3>
-              <p>Packlin y DanzaLab son nuestros servicios nuevos: los productos digitales donde estamos emprendiendo y donde aplicamos toda la experiencia anterior.</p>
-              <div className="new-work-grid">
-                <a href="https://packlinsa.com.ar/" target="_blank" rel="noopener noreferrer"><strong>Packlin</strong><span>Sitio web institucional para una PyME industrial.</span></a>
-                <a href="https://www.danzalab.com.ar" target="_blank" rel="noopener noreferrer"><strong>DanzaLab</strong><span>Aplicación a medida, con funcionalidades diseñadas junto al equipo del proyecto.</span></a>
-              </div>
-            </aside>
-          </div>
-        </section>
-
-        <section className="section section-alt" id="equipo">
-          <div className="container">
-            <h2>Quiénes lo hacen</h2>
-            <div className="team-grid">
-              {team.map((member) => (
-                <article key={member.name}>
-                  <h3>
-                    {member.name === "Lucas Marques de Paiva" ? (
-                      <a href="https://www.linkedin.com/in/lucas-marques-de-paiva-3b57681b/" target="_blank" rel="noopener noreferrer">{member.name}</a>
-                    ) : member.name === "Augusto Tovar" ? (
-                      <a href="https://www.linkedin.com/in/attoestudio/" target="_blank" rel="noopener noreferrer">{member.name}</a>
-                    ) : member.name}
-                  </h3>
-                  <p className="team-role">{member.role}</p>
-                  <p>{member.bio}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section process-section" id="proceso">
-          <div className="container">
-            <h2>Tu proyecto, etapa por etapa</h2>
-            <p className="section-intro">Sabemos dónde intervenir, cómo hacerlo y con qué herramientas, según lo que necesites. Elegí tu punto de partida y recorré la ruta.</p>
-            <div className="process-starts" role="group" aria-label="Punto de partida">
-              {startingPoints.map((point, index) => (
-                <button type="button" key={point.label} aria-pressed={selectedStart === index} onClick={() => chooseStart(index)}>{point.label}</button>
-              ))}
-            </div>
             <p className="focus-note" aria-live="polite">Para vos, el foco está en las etapas <strong>{currentStart.stages.map((stage) => stage + 1).join(", ")}</strong>. Podés recorrerlas todas.</p>
             <div className="timeline-scroll">
               <div className="timeline" role="group" aria-label="Etapas del proyecto">
@@ -420,17 +402,171 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="section section-alt">
+          <div className="container">
+            <h2>Lo que logramos al combinar Tecnología y Territorio</h2>
+            <div className="combination-list">
+              <div className="combination-heading"><span>Si necesitás</span><span>Combinamos</span><span>Lográs</span></div>
+              {combinations.map(([need, combination, result]) => (
+                <div className="combination-row" key={need}><strong>{need}</strong><span>{combination}</span><span>{result}</span></div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section">
+          <div className="container">
+            <h2>Nuestra experiencia</h2>
+            <div className="project-list">
+              {projects.map((project) => (
+                <article className="project-row" key={project.name}>
+                  <div>
+                    <strong>{project.href ? <a href={project.href} target="_blank" rel="noopener noreferrer">{project.name}</a> : project.name}</strong>
+                    <small>{project.location}</small>
+                  </div>
+                  <p>{project.description}</p>
+                </article>
+              ))}
+            </div>
+            <aside className="new-work">
+              <span className="tag">En desarrollo</span>
+              <h3>Lo que estamos construyendo hoy</h3>
+              <p>Packlin y DanzaLab son nuestros servicios nuevos: los productos digitales donde estamos emprendiendo y donde aplicamos toda la experiencia anterior.</p>
+              <div className="new-work-grid">
+                <a href="https://packlinsa.com.ar/" target="_blank" rel="noopener noreferrer"><strong>Packlin</strong><span>Sitio web institucional para una PyME industrial.</span></a>
+                <a href="https://www.danzalab.com.ar" target="_blank" rel="noopener noreferrer"><strong>DanzaLab</strong><span>Aplicación a medida, con funcionalidades diseñadas junto al equipo del proyecto.</span></a>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section className="section section-alt" id="equipo">
+          <div className="container">
+            <h2>Nuestro Equipo</h2>
+            <div className="team-grid">
+              {team.map((member) => (
+                <article key={member.name}>
+                  <h3>
+                    {member.name === "Lucas Marques de Paiva" ? (
+                      <a href="https://www.linkedin.com/in/lucas-marques-de-paiva-3b57681b/" target="_blank" rel="noopener noreferrer">{member.name}</a>
+                    ) : member.name === "Augusto Tovar" ? (
+                      <a href="https://www.linkedin.com/in/attoestudio/" target="_blank" rel="noopener noreferrer">{member.name}</a>
+                    ) : member.name}
+                  </h3>
+                  <p className="team-role">{member.role}</p>
+                  <p>{member.bio}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="section contact-section" id="contacto">
           <div className="container">
-            <h2>Contanos qué querés lograr</h2>
-            <p className="section-intro">Con un formulario breve y una primera conversación vemos por dónde empezar.</p>
+            <h2>En qué podemos ayudarte</h2>
+            <p className="section-intro">Contanos sobre tu proyecto y cómo preferís que nos comuniquemos.</p>
             <div className="button-row">
-              <a className="button button-primary" href="mailto:c.augustovar@gmail.com?subject=Consulta%20TTDigitales">Escribir a Augusto</a>
-              <a className="button" href="mailto:lucasmarques6@hotmail.com?subject=Consulta%20TTDigitales">Escribir a Lucas</a>
+              <button className="button button-primary" type="button" onClick={openContactForm}>Escribinos</button>
             </div>
           </div>
         </section>
       </main>
+
+      <dialog
+        className="contact-dialog"
+        ref={contactDialogRef}
+        aria-labelledby="contact-dialog-title"
+        onClose={() => setIsContactOpen(false)}
+        onCancel={() => setIsContactOpen(false)}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            contactDialogRef.current?.close();
+          }
+        }}
+      >
+        <div className="contact-dialog-content">
+          <button className="contact-dialog-close" type="button" aria-label="Cerrar formulario" onClick={() => contactDialogRef.current?.close()}>×</button>
+          {contactSubmitted ? (
+            <div className="contact-success" aria-live="polite">
+              <h2 id="contact-dialog-title">¡Gracias por escribirnos!</h2>
+              <p>Se abrirá tu cliente de correo con el mensaje listo. Revisá y confirmá el envío allí.</p>
+              <button className="button button-primary" type="button" onClick={() => contactDialogRef.current?.close()}>Cerrar</button>
+            </div>
+          ) : (
+            <>
+              <div className="contact-dialog-header">
+                <h2 id="contact-dialog-title">Contanos sobre tu proyecto</h2>
+                <p>Completá estos datos y te responderemos a la brevedad.</p>
+              </div>
+              <form className="contact-form" onSubmit={submitContactForm}>
+                <label className="form-field">
+                  Nombre *
+                  <input autoComplete="name" name="name" required />
+                </label>
+                <label className="form-field">
+                  Empresa o tipo de emprendimiento
+                  <input autoComplete="organization" name="organization" />
+                </label>
+                <label className="form-field">
+                  Localización: ciudad - barrio
+                  <input autoComplete="address-level2" name="location" />
+                </label>
+                <fieldset className="contact-fieldset" aria-describedby={contactError ? "contact-error" : undefined}>
+                  <legend>¿En qué podemos ayudarte? Elegí una o varias opciones *</legend>
+                  <div className="contact-options">
+                    {startingPoints.map((point, index) => (
+                      <label className="contact-option" key={point.label}>
+                        <input
+                          checked={selectedContactNeeds.includes(index)}
+                          name="needs"
+                          type="checkbox"
+                          value={point.label}
+                          onChange={() => toggleContactNeed(index)}
+                        />
+                        <span>{point.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {contactError && <p className="contact-error" id="contact-error" role="alert">{contactError}</p>}
+                </fieldset>
+                <label className="form-field">
+                  Contanos un poco más
+                  <textarea maxLength={1500} name="details" rows={4} />
+                </label>
+                <fieldset className="contact-fieldset">
+                  <legend>Te responderemos a la brevedad. ¿Por qué medio preferís? *</legend>
+                  <div className="contact-options contact-methods">
+                    <label className="contact-option">
+                      <input checked={contactMethod === "whatsapp"} name="contact-method" required type="radio" value="whatsapp" onChange={() => setContactMethod("whatsapp")} />
+                      <span>WhatsApp</span>
+                    </label>
+                    <label className="contact-option">
+                      <input checked={contactMethod === "email"} name="contact-method" required type="radio" value="email" onChange={() => setContactMethod("email")} />
+                      <span>Mail</span>
+                    </label>
+                  </div>
+                </fieldset>
+                {contactMethod === "whatsapp" && (
+                  <label className="form-field">
+                    Dejanos tu número de WhatsApp *
+                    <input autoComplete="tel" name="contact" required type="tel" />
+                  </label>
+                )}
+                {contactMethod === "email" && (
+                  <label className="form-field">
+                    Dejanos tu correo *
+                    <input autoComplete="email" name="contact" required type="email" />
+                  </label>
+                )}
+                <div className="contact-form-actions">
+                  <button className="button" type="button" onClick={() => contactDialogRef.current?.close()}>Cancelar</button>
+                  <button className="button button-primary" type="submit">Enviar</button>
+                </div>
+              </form>
+            </>
+          )}
+        </div>
+      </dialog>
 
       <footer className="site-footer"><div className="container">© 2026 TTDigitales. Tecnología y Territorios Digitales.</div></footer>
     </>
