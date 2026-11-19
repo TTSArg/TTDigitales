@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { createPageMetadata } from "../_lib/seo";
+import ProjectGridReveal from "./ProjectGridReveal";
 
 export const metadata: Metadata = createPageMetadata(
   "/proyectos",
@@ -219,22 +220,22 @@ export default function ProjectsPage() {
     <main className="portfolio-page">
       <section className="portfolio-intro">
         <div className="portfolio-container">
-          <p className="portfolio-eyebrow">Proyectos seleccionados</p>
-          <h1>Ideas digitales que conectan con el mundo real.</h1>
+          <p className="portfolio-eyebrow">Experiencia</p>
+          <h1>Proyectos en territorio y en empresa.</h1>
           <p>
-            Tecnología, datos y diseño para organizaciones, empresas y
-            territorios.
+            Una trayectoria que combina tecnología, datos y trabajo territorial
+            en Argentina, Colombia y México.
           </p>
         </div>
       </section>
 
       <section className="portfolio-section" aria-label="Proyectos realizados">
         <div className="portfolio-container">
-          <div className="portfolio-grid">
+          <ProjectGridReveal className="portfolio-grid">
             {projects.map((project) => (
               <ProjectCard key={project.name} project={project} />
             ))}
-          </div>
+          </ProjectGridReveal>
         </div>
       </section>
 
@@ -253,11 +254,11 @@ export default function ProjectsPage() {
               equipo.
             </p>
           </div>
-          <div className="portfolio-grid portfolio-grid--in-progress">
+          <ProjectGridReveal className="portfolio-grid portfolio-grid--in-progress">
             {inProgressProjects.map((project) => (
               <ProjectCard key={project.name} project={project} />
             ))}
-          </div>
+          </ProjectGridReveal>
         </div>
       </section>
 
